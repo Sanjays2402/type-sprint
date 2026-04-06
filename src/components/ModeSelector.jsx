@@ -2,8 +2,12 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 
 const DURATIONS = [15, 30, 60];
+const TEXT_MODES = [
+  { key: 'words', label: 'words' },
+  { key: 'quotes', label: 'quotes' },
+];
 
-export default function ModeSelector({ duration, setDuration, customDuration, setCustomDuration, disabled }) {
+export default function ModeSelector({ duration, setDuration, customDuration, setCustomDuration, textMode, setTextMode, disabled }) {
   const { theme } = useTheme();
 
   return (
@@ -106,6 +110,42 @@ export default function ModeSelector({ duration, setDuration, customDuration, se
             custom
           </motion.button>
         </div>
+      </div>
+
+      {/* Text mode toggle */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+        background: theme.surface,
+        borderRadius: '8px',
+        padding: '4px',
+        border: `1px solid ${theme.border}`,
+        marginLeft: '0.5rem',
+      }}>
+        {TEXT_MODES.map((m) => (
+          <motion.button
+            key={m.key}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => !disabled && setTextMode(m.key)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              fontSize: '0.8rem',
+              fontFamily: 'inherit',
+              fontWeight: textMode === m.key ? 600 : 400,
+              background: textMode === m.key ? theme.accentDim : 'transparent',
+              color: textMode === m.key ? theme.accent : theme.text,
+              transition: 'all 0.2s ease',
+              opacity: disabled ? 0.5 : 1,
+            }}
+          >
+            {m.label}
+          </motion.button>
+        ))}
       </div>
     </motion.div>
   );

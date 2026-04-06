@@ -1,6 +1,7 @@
 import { useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import CapsLockWarning from './CapsLockWarning';
 
 export default function TypingArea({
   words,
@@ -12,6 +13,7 @@ export default function TypingArea({
   timeLeft,
   wpm,
   accuracy,
+  capsLockOn,
   STATES,
 }) {
   const { theme } = useTheme();
@@ -134,6 +136,9 @@ export default function TypingArea({
       margin: '0 auto',
       width: '100%',
     }}>
+      {/* Caps Lock Warning */}
+      <CapsLockWarning show={capsLockOn} />
+
       {/* Live stats */}
       {state === STATES.RUNNING && (
         <motion.div

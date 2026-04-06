@@ -16,6 +16,9 @@ function TypingApp() {
     return stored ? parseInt(stored) : 30;
   });
   const [customDuration, setCustomDuration] = useState(45);
+  const [textMode, setTextMode] = useState(() => {
+    return localStorage.getItem('ts-textMode') || 'words';
+  });
   const [results, setResults] = useState(null);
   const [isNewBest, setIsNewBest] = useState(false);
 
@@ -29,11 +32,12 @@ function TypingApp() {
     timeLeft,
     wpm,
     accuracy,
+    capsLockOn,
     handleKeyDown,
     initTest,
     getResults,
     STATES,
-  } = useTypingTest(duration);
+  } = useTypingTest(duration, 'medium', textMode);
 
   const { checkAndSave, getBest } = usePersonalBest();
 
@@ -41,6 +45,10 @@ function TypingApp() {
   useEffect(() => {
     localStorage.setItem('ts-duration', duration.toString());
   }, [duration]);
+
+  useEffect(() => {
+    localStorage.setItem('ts-textMode', textMode);
+  }, [textMode]);
 
   // Detect finish
   useEffect(() => {
@@ -92,6 +100,8 @@ function TypingApp() {
         setDuration={handleSetDuration}
         customDuration={customDuration}
         setCustomDuration={setCustomDuration}
+        textMode={textMode}
+        setTextMode={setTextMode}
         disabled={state === STATES.RUNNING}
       />
 
@@ -116,6 +126,7 @@ function TypingApp() {
               timeLeft={timeLeft}
               wpm={wpm}
               accuracy={accuracy}
+              capsLockOn={capsLockOn}
               STATES={STATES}
             />
           ) : results && (

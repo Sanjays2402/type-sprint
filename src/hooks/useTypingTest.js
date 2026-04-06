@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { generateWords, getWordCount } from '../data/words';
+import { getQuoteWords } from '../data/quotes';
 
 const STATES = { IDLE: 'idle', RUNNING: 'running', FINISHED: 'finished' };
 
-export function useTypingTest(duration = 30) {
+export function useTypingTest(duration = 30, difficulty = 'medium', textMode = 'words') {
   const [state, setState] = useState(STATES.IDLE);
   const [words, setWords] = useState([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -16,6 +17,7 @@ export function useTypingTest(duration = 30) {
   const [accuracy, setAccuracy] = useState(100);
   const [missedKeys, setMissedKeys] = useState({});
   const [wpmHistory, setWpmHistory] = useState([]);
+  const [capsLockOn, setCapsLockOn] = useState(false);
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -26,7 +28,12 @@ export function useTypingTest(duration = 30) {
 
   const initTest = useCallback(() => {
     const count = getWordCount(duration);
-    const newWords = generateWords(count);
+    let newWords;
+    if (textMode === 'quotes') {
+      newWords = getQuoteWords(count);
+    } else {
+      newWords = generateWords(count, difficulty, textMode);
+    }
     setWords(newWords);
     setCurrentWordIndex(0);
     setCurrentCharIndex(0);
@@ -44,7 +51,7 @@ export function useTypingTest(duration = 30) {
     missedKeysRef.current = {};
     wpmHistoryRef.current = [];
     if (timerRef.current) clearInterval(timerRef.current);
-  }, [duration]);
+  }, [duration, difficulty, textMode]);
 
   useEffect(() => {
     initTest();
@@ -57,7 +64,6 @@ export function useTypingTest(duration = 30) {
       const remaining = Math.max(0, duration - elapsed);
       setTimeLeft(Math.ceil(remaining));
 
-      // track WPM over time
       const minutes = elapsed / 60;
       if (minutes > 0) {
         const currentWpm = Math.round(correctCharsRef.current / 5 / minutes);
@@ -75,6 +81,11 @@ export function useTypingTest(duration = 30) {
   }, [duration]);
 
   const handleKeyDown = useCallback((e) => {
+    // Track caps lock
+    if (e.getModifierState) {
+      setCapsLockOn(e.getModifierState('CapsLock'));
+    }
+
     if (state === STATES.FINISHED) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (e.key === 'Tab') {
@@ -113,7 +124,6 @@ export function useTypingTest(duration = 30) {
       setCurrentCharIndex(0);
       setTyped('');
 
-      // add space char
       totalCharsRef.current += 1;
       if (isCorrect) correctCharsRef.current += 1;
 
@@ -128,7 +138,6 @@ export function useTypingTest(duration = 30) {
       return;
     }
 
-    // typing a character
     const charIndex = currentCharIndex;
     const expectedChar = currentWord[charIndex];
     const isCorrect = e.key === expectedChar;
@@ -170,11 +179,14 @@ export function useTypingTest(duration = 30) {
       correctChars: correct,
       wrongChars: total - correct,
       duration,
+      difficulty,
+      textMode,
       wordResults,
       missedKeys: missedKeysRef.current,
       wpmHistory: wpmHistoryRef.current,
+      timestamp: new Date().toISOString(),
     };
-  }, [duration, wordResults]);
+  }, [duration, difficulty, textMode, wordResults]);
 
   return {
     state,
@@ -189,6 +201,7 @@ export function useTypingTest(duration = 30) {
     accuracy,
     missedKeys,
     wpmHistory,
+    capsLockOn,
     handleKeyDown,
     initTest,
     getResults,
